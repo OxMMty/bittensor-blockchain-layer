@@ -173,14 +173,18 @@ impl<T: Config> Pallet<T> {
                 continue;
             }
 
-            // --- 7 This network is at tempo and we are running its epoch.
+            // --- 7. Run the epoch mechanism and return emission tuples for hotkeys in the network.
+            let emission_tuples_this_block: Vec<(T::AccountId, u64, u64)> =
+                match Self::epoch(netuid, None) {
+                    EpochReturnType::Emission(emission_tuples) => emission_tuples,
+                    _ => vec![],
+                };
+
+            // --- 8 This network is at tempo and we are running its epoch.
             // First drain the queued emission.
             let emission_to_drain: u64 = PendingEmission::<T>::get(netuid);
             PendingEmission::<T>::insert(netuid, 0);
 
-            // --- 8. Run the epoch mechanism and return emission tuples for hotkeys in the network.
-            let emission_tuples_this_block: Vec<(T::AccountId, u64, u64)> =
-                Self::epoch(netuid, emission_to_drain);
             log::debug!(
                 "netuid_i: {:?} emission_to_drain: {:?} ",
                 netuid,

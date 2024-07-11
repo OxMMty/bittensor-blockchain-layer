@@ -38,4 +38,8 @@ sp_api::decl_runtime_apis! {
         fn get_remaining_arbitration_period( coldkey_account_vec: Vec<u8> ) -> Vec<u8>;
         fn get_coldkey_swap_destinations( coldkey_account_vec: Vec<u8> ) -> Vec<u8>;
     }
+
+    pub trait SubtensorRuntimeApi {
+        fn get_epoch( netuid: u16, incentive_opt: Option<bool> ) -> Vec<u8>;
+    }
 }

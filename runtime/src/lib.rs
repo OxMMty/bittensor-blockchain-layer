@@ -70,6 +70,8 @@ pub use sp_runtime::{Perbill, Permill};
 // Subtensor module
 pub use pallet_subtensor;
 
+use pallet_subtensor::EpochReturnType;
+
 // An index to a block.
 pub type BlockNumber = u32;
 
@@ -1679,6 +1681,17 @@ impl_runtime_apis! {
         fn get_coldkey_swap_destinations( coldkey_account_vec: Vec<u8> ) -> Vec<u8> {
             let result = SubtensorModule::get_coldkey_swap_destinations( coldkey_account_vec );
             result.encode()
+        }
+    }
+
+    impl subtensor_custom_rpc_runtime_api::SubtensorRuntimeApi<Block> for Runtime {
+        fn get_epoch( netuid: u16, incentive_opt: Option<bool>, ) -> Vec<u8> {
+            let result = SubtensorModule::epoch( netuid, incentive_opt );
+
+            match result {
+                EpochReturnType::Emission(value) => value.encode(),
+                EpochReturnType::Incentive(value) => value.encode(),
+            }
         }
     }
 }

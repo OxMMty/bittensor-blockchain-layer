@@ -26,6 +26,7 @@ use sp_runtime::{
     DispatchError,
 };
 use sp_std::marker::PhantomData;
+use substrate_fixed::types::I32F32;
 
 // ============================
 //	==== Benchmark Imports =====
@@ -2307,6 +2308,15 @@ pub enum CallType {
     RegisterNetwork,
     #[default]
     Other,
+}
+
+/************************************************************
+    EpochReturnType definition
+************************************************************/
+#[derive(Debug, PartialEq)]
+pub enum EpochReturnType<T: Config> {
+    Emission(Vec<(T::AccountId, u64, u64)>),
+    Incentive(Vec<I32F32>),
 }
 
 #[freeze_struct("61e2b893d5ce6701")]

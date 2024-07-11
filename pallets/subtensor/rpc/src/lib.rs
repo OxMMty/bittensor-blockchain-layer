@@ -13,7 +13,7 @@ use sp_api::ProvideRuntimeApi;
 
 pub use subtensor_custom_rpc_runtime_api::{
     ColdkeySwapRuntimeApi, DelegateInfoRuntimeApi, NeuronInfoRuntimeApi, SubnetInfoRuntimeApi,
-    SubnetRegistrationRuntimeApi,
+    SubnetRegistrationRuntimeApi, SubtensorRuntimeApi,
 };
 
 #[rpc(client, server)]
@@ -69,6 +69,14 @@ pub trait SubtensorCustomApi<BlockHash> {
         coldkey_account_vec: Vec<u8>,
         at: Option<BlockHash>,
     ) -> RpcResult<Vec<u8>>;
+
+    #[method(name = "subtensor_getEpoch")]
+    fn get_subtensor_epoch(
+        &self,
+        netuid: u16,
+        incentive_opt: Option<bool>,
+        at: Option<BlockHash>,
+    ) -> RpcResult<Vec<u8>>;
 }
 
 pub struct SubtensorCustom<C, P> {
@@ -118,6 +126,7 @@ where
     C::Api: SubnetInfoRuntimeApi<Block>,
     C::Api: SubnetRegistrationRuntimeApi<Block>,
     C::Api: ColdkeySwapRuntimeApi<Block>,
+    C::Api: SubtensorRuntimeApi<Block>,
 {
     fn get_delegates(&self, at: Option<<Block as BlockT>::Hash>) -> RpcResult<Vec<u8>> {
         let api = self.client.runtime_api();
@@ -288,5 +297,18 @@ where
                 Error::RuntimeError(format!("Unable to get coldkey swap destinations: {:?}", e))
                     .into()
             })
+    }
+
+    fn get_subtensor_epoch(
+        &self,
+        netuid: u16,
+        incentive_opt: Option<bool>,
+        at: Option<<Block as BlockT>::Hash>,
+    ) -> RpcResult<Vec<u8>> {
+        let api = self.client.runtime_api();
+        let at = at.unwrap_or_else(|| self.client.info().best_hash);
+
+        api.get_epoch(at, netuid, incentive_opt)
+            .map_err(|e| Error::RuntimeError(format!("Unable to get epch: {:?}", e)).into())
     }
 }

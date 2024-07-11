@@ -348,7 +348,10 @@ impl<T: Config> Pallet<T> {
     ///     - Print debugging outputs.
     ///
     #[allow(clippy::indexing_slicing)]
-    pub fn epoch(netuid: u16, rao_emission: u64) -> Vec<(T::AccountId, u64, u64)> {
+    pub fn epoch(netuid: u16, incentive_opt: Option<bool>) -> EpochReturnType<T> {
+        // Set rao_emission by calling the getter funtion
+        let rao_emission: u64 = PendingEmission::<T>::get(netuid);
+
         // Get subnetwork size.
         let n: u16 = Self::get_subnetwork_n(netuid);
         log::trace!("Number of Neurons in Network: {:?}", n);
@@ -690,17 +693,24 @@ impl<T: Config> Pallet<T> {
                 }
             });
 
-        // Emission tuples ( hotkeys, server_emission, validator_emission )
-        hotkeys
-            .into_iter()
-            .map(|(uid_i, hotkey)| {
-                (
-                    hotkey,
-                    server_emission[uid_i as usize],
-                    validator_emission[uid_i as usize],
-                )
-            })
-            .collect()
+        // Return Incentive or Emission according to incentive_opt
+        if incentive_opt.unwrap_or(false) {
+            EpochReturnType::<T>::Incentive(incentive)
+        } else {
+            // Emission tuples ( hotkeys, server_emission, validator_emission )
+            let emission = hotkeys
+                .into_iter()
+                .map(|(uid_i, hotkey)| {
+                    (
+                        hotkey,
+                        server_emission[uid_i as usize],
+                        validator_emission[uid_i as usize],
+                    )
+                })
+                .collect();
+
+            EpochReturnType::<T>::Emission(emission)
+        }
     }
 
     pub fn get_float_rho(netuid: u16) -> I32F32 {
